@@ -1,92 +1,94 @@
 function solution(matrix) {
-  var upperSpiral = [];
-  var lowerSpiral = [];
+  var boundary = {
+    left: 0,
+    right: matrix[0].length - 1,
+    top: 0,
+    bottom: matrix.length - 1,
+  };
 
-  while (!isEmpty(matrix)) {
-    // remove the upper row of the matrix (updating the original matrix) and return it
-    var upperRow = popUpperRow(matrix);
-    upperSpiral = upperSpiral.concat(upperRow);
+  var tracer = {
+    x: 0,
+    y: 0,
+    dx: 1,
+    dy: 0,
+  };
 
-    if (!isEmpty(matrix)) {
-      // remove the bottom row of the matrix (updating the original matrix) and return it
-      var bottomRow = popBottomRow(matrix);
-      lowerSpiral = lowerSpiral.concat(bottomRow);
+  var upperSpiralSum = 0;
 
-      if (!isEmpty(matrix)) {
-        matrix = rotateMatrixCounterClockWise(matrix);
-      }
+  while (true) {
+    var currentItem = getCurrentItem(matrix, tracer);
+
+    // console.group('iteration' + i)
+    // console.log(currentItem);
+    // console.log(tracer);
+    // console.log(boundary);
+    // console.groupEnd();
+
+    if (typeof currentItem !== 'number') {
+      // console.log('currentItem is not a number; breaking out of loop!');
+      break;
+    }
+
+    upperSpiralSum += currentItem;
+
+    moveTracer(tracer);
+
+    if (!checkBoundary(tracer, boundary)) {
+      // console.log('area negative; breaking out of loop');
+      break;
     }
   }
 
-  var sumOfUpperSpiral = addNumbers(upperSpiral);
-  return sumOfUpperSpiral;
+  return upperSpiralSum;
 }
 
-function isEmpty(matrix) {
-  return (matrix.length === 0);
-}
-
-function popUpperRow(matrix) {
-  return matrix.shift();
-}
-
-function popBottomRow(matrix) {
-  return matrix.pop();
-}
-
-function rotateMatrixCounterClockWise(matrix) {
-  var rows = numRows(matrix);
-  var cols = numCols(matrix);
-
-  var rotatedMatrix = createEmptyMatrix(cols, rows);
-
-  for (var i = 0; i < rows; i++) {
-    for (var j = 0; j < cols; j++) {
-      rotatedMatrix[cols - j - 1][i] = matrix[i][j];
-    }
-  }
-
-  return rotatedMatrix;
-}
-
-function numRows(matrix) {
-  return matrix.length;
-}
-
-function numCols(matrix) {
-  return (matrix[0] !== undefined ? matrix[0].length : 0);
-}
-
-function createEmptyMatrix(rows, cols) {
-  var matrix = [];
-  for (var i = 0; i < rows; i++) {
-    matrix[i] = [];
-    for (var j = 0; j < cols; j++) {
-      matrix[i][j] = 0;
-    }
-  }
-  return matrix;
-}
-
-function displayMatrix(matrix) {
-  var rows = numRows(matrix);
-  var cols = numCols(matrix);
-
-  console.log('rows =', rows, 'cols =', cols);
-
-  for (var i = 0; i < numRows(matrix); i++) {
-    var line = ' ';
-    for (var j = 0; j < numCols(matrix); j++) {
-      line += matrix[i][j] + ' ';
-    }
-    console.log(line);
+function getCurrentItem(matrix, tracer) {
+  if (typeof matrix[tracer.y][tracer.x] === 'number') {
+    return matrix[tracer.y][tracer.x];
+  } else {
+    return undefined;
   }
 }
 
-function addNumbers(numbers) {
-  return numbers.reduce(function (acc, curr) {
-    return (acc + curr);
-  });
+function moveTracer(tracer) {
+  tracer.x += tracer.dx;
+  tracer.y += tracer.dy;
+}
+
+// Return false if bounding area is negative.
+// Return true otherwise after performing other detections
+// and setting up the directions accordingly.
+function checkBoundary(tracer, boundary) {
+  // return false if area is negative
+  if (boundary.top > boundary.bottom || boundary.left > boundary.right) {
+    // console.log('area negative');
+    return false;
+  }
+
+  if (tracer.dx === 1 && tracer.x >= boundary.right) {
+    // if moving right and struck the right boundary
+    tracer.dx = 0;
+    tracer.dy = 1;
+    boundary.top++;
+    boundary.bottom--;
+  } else if (tracer.dy === 1 && tracer.y >= boundary.bottom) {
+    tracer.dx = -1;
+    tracer.dy = 0;
+    boundary.left++;
+    boundary.right--;
+  } else if (tracer.dx === -1 && tracer.x <= boundary.left) {
+    tracer.dx = 0;
+    tracer.dy = -1;
+    boundary.top++;
+    boundary.bottom--;
+  } else if (tracer.dy === -1 && tracer.y <= boundary.top) {
+    tracer.dx = 1;
+    tracer.dy = 0;
+    boundary.left++;
+    boundary.right--;
+  }
+
+  return true;
 }
 
 var matrix = [
@@ -99,4 +101,21 @@ var matrix = [
   [0, 4, 3, 2, 5, 7, 5, 4]
 ];
 
+console.group('Solution');
 console.log(solution(matrix));
+console.log("Original matrix should be intact.");
+console.log(matrix);
+console.groupEnd();
+
+console.group('Benchmark');
+var benchmarkRepeat = 10000;
+console.log('Test: running same function on given matrix for ' + benchmarkRepeat + ' times for each measurement');
+for (var i = 0; i < 20; i++) {
+  console.time();
+  for (var j = 0; j < 10000; j++) {
+    solution(matrix);
+  }
+  console.timeEnd();
+}
+console.groupEnd();
+

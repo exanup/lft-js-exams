@@ -1,6 +1,7 @@
-function solution(matrix) {
+function solution(matrixOriginal) {
+  var matrix = JSON.parse(JSON.stringify(matrixOriginal)); // deep copy
   var upperSpiral = [];
-  var lowerSpiral = [];
+  // var lowerSpiral = [];
 
   while (!isEmpty(matrix)) {
     // remove the upper row of the matrix (updating the original matrix) and return it
@@ -10,7 +11,7 @@ function solution(matrix) {
     if (!isEmpty(matrix)) {
       // remove the bottom row of the matrix (updating the original matrix) and return it
       var bottomRow = popBottomRow(matrix);
-      lowerSpiral = lowerSpiral.concat(bottomRow);
+      // lowerSpiral = lowerSpiral.concat(bottomRow);
 
       if (!isEmpty(matrix)) {
         matrix = rotateMatrixCounterClockWise(matrix);
@@ -84,9 +85,13 @@ function displayMatrix(matrix) {
 }
 
 function addNumbers(numbers) {
-  return numbers.reduce(function (acc, curr) {
-    return (acc + curr);
-  });
+  return (
+    numbers.length > 0 ?
+    numbers.reduce(function (acc, curr) {
+      return (acc + curr);
+    }) :
+    0
+  );
 }
 
 var matrix = [
@@ -99,4 +104,21 @@ var matrix = [
   [0, 4, 3, 2, 5, 7, 5, 4]
 ];
 
+console.group('Solution');
 console.log(solution(matrix));
+console.log("Original matrix should be intact.");
+console.log(matrix);
+console.groupEnd();
+
+console.group('Benchmark');
+var benchmarkRepeat = 10000;
+console.log('Test: running same function on given matrix for ' + benchmarkRepeat + ' times for each measurement');
+for (var i = 0; i < 20; i++) {
+  console.time();
+  for (var j = 0; j < 10000; j++) {
+    solution(matrix);
+  }
+  console.timeEnd();
+}
+console.groupEnd();
+
